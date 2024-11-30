@@ -60,14 +60,18 @@ type configDiscovery struct {
 
 type Opt func(config *types.AppConfig)
 
-func New(configUrl string, opt ...Opt) ConfigDiscovery {
+func New(configUrl string, opt ...Opt) (ConfigDiscovery, error) {
 	cfg := &configDiscovery{cfgUri: configUrl}
 
 	for _, o := range opt {
 		o(cfg.Config)
 	}
 
-	return cfg
+	if err := cfg.FetchConfig(); err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
 }
 
 func (c *configDiscovery) ListenUpdates() error {
@@ -82,6 +86,7 @@ func (c *configDiscovery) ListenUpdates() error {
 	go func() {
 		for range time.Tick(time.Second * 5) {
 			err := c.FetchConfig()
+
 			log.Error().Err(err).Msg("update config err")
 		}
 	}()
