@@ -61,7 +61,7 @@ type configDiscovery struct {
 type Opt func(config *types.AppConfig)
 
 func New(configUrl string, opt ...Opt) (ConfigDiscovery, error) {
-	cfg := &configDiscovery{cfgUri: configUrl}
+	cfg := &configDiscovery{cfgUri: configUrl, Updates: make(chan *types.AppConfig)}
 
 	for _, o := range opt {
 		o(cfg.Config)
@@ -264,8 +264,4 @@ func (c *configDiscovery) HasVaultByCollateralAssetName(name string) bool {
 
 func (c *configDiscovery) GetVaultByCollateralAssetName(name string) *types.Vault {
 	return c.VaultsMapByCollateralAssetName[name]
-}
-
-func (c *configDiscovery) OnUpdate() {
-
 }

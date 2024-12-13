@@ -32,10 +32,7 @@ type Market struct {
 	BaseAsset       string   `json:"baseAsset"`
 	SettlementToken string   `json:"settlementToken"`
 	Tags            []string `json:"tags"`
-	Coordinator     string   `json:"coordinator"`
 	Type            string   `json:"type"`
-	Schedule        *string  `json:"schedule,omitempty"`
-	Holidays        *string  `json:"holidays,omitempty"`
 }
 
 type Vault struct {
