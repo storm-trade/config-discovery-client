@@ -1,8 +1,9 @@
 package types
 
 type AssetSchedule struct {
-	Schedule string `json:"schedule"`
-	Holidays string `json:"holidays"`
+	ScheduleTimeZone string `json:"scheduleTimeZone,omitempty"`
+	Schedule         string `json:"schedule"`
+	Holidays         string `json:"holidays"`
 }
 
 type AssetsSchedule struct {
