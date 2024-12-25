@@ -87,7 +87,9 @@ func (c *configDiscovery) ListenUpdates() error {
 		for range time.Tick(time.Second * 5) {
 			err := c.FetchConfig()
 
-			log.Error().Err(err).Msg("update config err")
+			if err != nil {
+				log.Error().Err(err).Msg("update config err")
+			}
 		}
 	}()
 
