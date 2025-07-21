@@ -13,6 +13,7 @@ type ConfigDiscovery interface {
 	ListenUpdates() error
 	GetConfig() *types.AppConfig
 	GetAssets() []*types.Asset
+	GetAssetConfigs() []*types.AssetConfig
 	GetSchedules() map[string]*types.AssetSchedule
 	HasMarketByAddress(address string) bool
 	GetMarketByAddress(address string) *types.Market
