@@ -34,6 +34,11 @@ type ConfigDiscovery interface {
 	GetVaultByCollateralAssetId(assetId string) *types.Vault
 	HasVaultByCollateralAssetName(name string) bool
 	GetVaultByCollateralAssetName(name string) *types.Vault
+	HasAssetConfigByName(name string) bool
+	GetAssetConfigByName(name string) *types.AssetConfig
+	HasAssetConfigByIndex(index int) bool
+	GetAssetConfigByIndex(index int) *types.AssetConfig
+	GetAssetConfigsByProvider(name string) []*types.AssetConfig
 	UpdatesChannel() <-chan *types.AppConfig
 }
 
