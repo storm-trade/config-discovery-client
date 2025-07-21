@@ -42,6 +42,7 @@ type configDiscovery struct {
 	LastUpdatedAt *string
 	Config        *types.AppConfig
 	Assets        []*types.Asset
+	AssetConfigs  []*types.AssetConfig
 	Schedules     map[string]*types.AssetSchedule
 
 	Updates chan *types.AppConfig
@@ -56,6 +57,9 @@ type configDiscovery struct {
 	AssetsMapByName                  map[string]*types.Asset
 	AssetsMapByIndex                 map[int]*types.Asset
 	CollateralAssetsMapByName        map[string]*types.CollateralAsset
+	AssetConfigsMapByName            map[string]*types.AssetConfig
+	AssetConfigsMapByIndex           map[int]*types.AssetConfig
+	AssetConfigsMapByProvider        map[string][]*types.AssetConfig
 }
 
 type Opt func(config *types.AppConfig)
@@ -109,7 +113,7 @@ func (c *configDiscovery) FetchConfig() error {
 
 		assets, err := request.Get[[]*types.Asset](c.cfgUri + "/assets")
 		if err != nil {
-			return errors.Wrap(err, "fetch assets config")
+			return errors.Wrap(err, "fetch assets list")
 		}
 
 		schedule, err := request.Get[types.AssetsSchedule](c.cfgUri + "/assets-schedule")
@@ -117,8 +121,14 @@ func (c *configDiscovery) FetchConfig() error {
 			return errors.Wrap(err, "fetch assets schedule config")
 		}
 
+		conf, err := request.Get[[]*types.AssetConfig](c.cfgUri + "/assets-config")
+		if err != nil {
+			return errors.Wrap(err, "fetch assets config")
+		}
+
 		c.Config = &cfg
 		c.Assets = assets
+		c.AssetConfigs = conf
 		c.Schedules = schedule.Schedules
 
 		c.VaultsMapByAddress = make(map[string]*types.Vault)
@@ -163,6 +173,18 @@ func (c *configDiscovery) FetchConfig() error {
 			c.AssetsMapByIndex[a.Index] = a
 		}
 
+		c.AssetConfigsMapByProvider = make(map[string][]*types.AssetConfig)
+		c.AssetConfigsMapByName = make(map[string]*types.AssetConfig)
+		for _, a := range c.AssetConfigs {
+			c.AssetConfigsMapByName[a.Name] = a
+			for _, o := range a.Oracles {
+				if c.AssetConfigsMapByProvider[o.Provider] == nil {
+					c.AssetConfigsMapByProvider[o.Provider] = make([]*types.AssetConfig, 0)
+				}
+				c.AssetConfigsMapByProvider[o.Provider] = append(c.AssetConfigsMapByProvider[o.Provider], a)
+			}
+		}
+
 		go func() {
 			c.Updates <- c.Config
 		}()
@@ -181,6 +203,10 @@ func (c *configDiscovery) GetConfig() *types.AppConfig {
 
 func (c *configDiscovery) GetAssets() []*types.Asset {
 	return c.Assets
+}
+
+func (c *configDiscovery) GetAssetConfigs() []*types.AssetConfig {
+	return c.AssetConfigs
 }
 
 func (c *configDiscovery) GetSchedules() map[string]*types.AssetSchedule {
@@ -266,4 +292,24 @@ func (c *configDiscovery) HasVaultByCollateralAssetName(name string) bool {
 
 func (c *configDiscovery) GetVaultByCollateralAssetName(name string) *types.Vault {
 	return c.VaultsMapByCollateralAssetName[name]
+}
+
+func (c *configDiscovery) HasAssetConfigByName(name string) bool {
+	return c.AssetConfigsMapByName[name] != nil
+}
+
+func (c *configDiscovery) GetAssetConfigByName(name string) *types.AssetConfig {
+	return c.AssetConfigsMapByName[name]
+}
+
+func (c *configDiscovery) HasAssetConfigByIndex(index int) bool {
+	return c.AssetConfigsMapByIndex[index] != nil
+}
+
+func (c *configDiscovery) GetAssetConfigByIndex(index int) *types.AssetConfig {
+	return c.AssetConfigsMapByIndex[index]
+}
+
+func (c *configDiscovery) GetAssetConfigsByProvider(name string) []*types.AssetConfig {
+	return c.AssetConfigsMapByProvider[name]
 }

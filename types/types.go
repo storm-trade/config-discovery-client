@@ -16,6 +16,29 @@ type Asset struct {
 	Type  string `json:"type"`
 }
 
+type OracleConfig struct {
+	Provider string `json:"provider"`
+}
+
+type AssetConfig struct {
+	Index            int            `json:"index"`
+	Name             string         `json:"name"`
+	Type             string         `json:"type"`
+	Description      string         `json:"description"`
+	VPI              VPIParams      `json:"vpi"`
+	ScheduleTimeZone string         `json:"scheduleTimeZone"`
+	Schedule         string         `json:"schedule"`
+	Holidays         string         `json:"holidays"`
+	Oracles          []OracleConfig `json:"oracles"`
+}
+
+type VPIParams struct {
+	MarketDepthLong  string `json:"marketDepthLong"`
+	MarketDepthShort string `json:"marketDepthShort"`
+	Spread           string `json:"spread"`
+	K                string `json:"k"`
+}
+
 type CollateralAsset struct {
 	Name     string `json:"name"`
 	Decimals int    `json:"decimals"`

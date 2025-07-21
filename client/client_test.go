@@ -7,9 +7,9 @@ import (
 )
 
 func TestConfigDiscoveryImpl_GetAssetByName(t *testing.T) {
-	cDiscovery := client.New("http://localhost:55824/config")
+	cDiscovery, err := client.New("https://api.stage.stormtrade.dev/api/config")
 
-	err := cDiscovery.ListenUpdates()
+	err = cDiscovery.ListenUpdates()
 	require.Nil(t, err)
 
 	assetInfo := cDiscovery.GetAssetByName("LTC")
