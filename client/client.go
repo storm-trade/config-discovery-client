@@ -40,6 +40,7 @@ type ConfigDiscovery interface {
 	HasAssetConfigByIndex(index int) bool
 	GetAssetConfigByIndex(index int) *types.AssetConfig
 	GetAssetConfigsByProvider(name string) []*types.AssetConfig
+	IsLazer(address string) bool
 	UpdatesChannel() <-chan *types.AppConfig
 }
 
@@ -66,6 +67,7 @@ type configDiscovery struct {
 	AssetConfigsMapByName            map[string]*types.AssetConfig
 	AssetConfigsMapByIndex           map[int]*types.AssetConfig
 	AssetConfigsMapByProvider        map[string][]*types.AssetConfig
+	LazerAssetsMap                   map[string]bool
 }
 
 type Opt func(config *types.AppConfig)
@@ -181,9 +183,13 @@ func (c *configDiscovery) FetchConfig() error {
 
 		c.AssetConfigsMapByProvider = make(map[string][]*types.AssetConfig)
 		c.AssetConfigsMapByName = make(map[string]*types.AssetConfig)
+		c.LazerAssetsMap = make(map[string]bool)
 		for _, a := range c.AssetConfigs {
 			c.AssetConfigsMapByName[a.Name] = a
 			for _, o := range a.Oracles {
+				if o.Provider == "pyth-lazer" {
+					c.LazerAssetsMap[a.Name] = true
+				}
 				if c.AssetConfigsMapByProvider[o.Provider] == nil {
 					c.AssetConfigsMapByProvider[o.Provider] = make([]*types.AssetConfig, 0)
 				}
@@ -318,4 +324,9 @@ func (c *configDiscovery) GetAssetConfigByIndex(index int) *types.AssetConfig {
 
 func (c *configDiscovery) GetAssetConfigsByProvider(name string) []*types.AssetConfig {
 	return c.AssetConfigsMapByProvider[name]
+}
+
+func (c *configDiscovery) IsLazer(name string) bool {
+	_, ok := c.LazerAssetsMap[name]
+	return ok
 }
