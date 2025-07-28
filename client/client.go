@@ -6,6 +6,7 @@ import (
 	"github.com/storm-trade/config-discovery-client/request"
 	"github.com/storm-trade/config-discovery-client/types"
 	"golang.org/x/exp/maps"
+	"math/big"
 	"strconv"
 	"time"
 )
@@ -42,9 +43,14 @@ type ConfigDiscovery interface {
 	GetAssetConfigByIndex(index int) *types.AssetConfig
 	GetAssetConfigsByProvider(name string) []*types.AssetConfig
 	IsLazer(address string) bool
-	GetVPIHistory(name string) (map[int64]types.VPIParams, bool)
-	GetVPIParamsAtTimestamp(name string, ts int64) (*types.VPIParams, bool)
+	GetVPIHistory(name string) (map[int64]types.VPIParamsParsed, bool)
+	GetVPIParamsAtTimestamp(name string, ts int64) (*types.VPIParamsParsed, bool)
 	UpdatesChannel() <-chan *types.AppConfig
+}
+
+func strToBigInt(str string) (*big.Int, bool) {
+	n := new(big.Int)
+	return n.SetString(str, 10)
 }
 
 type configDiscovery struct {
@@ -54,7 +60,7 @@ type configDiscovery struct {
 	Assets        []*types.Asset
 	AssetConfigs  []*types.AssetConfig
 	Schedules     map[string]*types.AssetSchedule
-	VPIHistory    map[string]map[int64]types.VPIParams
+	VPIHistory    map[string]map[int64]types.VPIParamsParsed
 
 	Updates chan *types.AppConfig
 	// Maps
@@ -147,15 +153,36 @@ func (c *configDiscovery) FetchConfig() error {
 		c.Assets = assets
 		c.AssetConfigs = conf
 		c.Schedules = schedule.Schedules
-		c.VPIHistory = make(map[string]map[int64]types.VPIParams)
+		c.VPIHistory = make(map[string]map[int64]types.VPIParamsParsed)
 		for name, h := range history {
-			c.VPIHistory[name] = make(map[int64]types.VPIParams)
+			c.VPIHistory[name] = make(map[int64]types.VPIParamsParsed)
 			for ts, params := range h {
 				timestamp, err := strconv.ParseInt(ts, 10, 64)
 				if err != nil {
 					return errors.Wrap(err, "parse vpi timestamp")
 				}
-				c.VPIHistory[name][timestamp] = params
+				marketDepthLong, ok := strToBigInt(params.MarketDepthLong)
+				if !ok {
+					return errors.Wrap(err, "parse vpi marketDepthLong")
+				}
+				marketDepthShort, ok := strToBigInt(params.MarketDepthShort)
+				if !ok {
+					return errors.Wrap(err, "parse vpi marketDepthLong")
+				}
+				spread, ok := strToBigInt(params.Spread)
+				if !ok {
+					return errors.Wrap(err, "parse vpi marketDepthLong")
+				}
+				k, ok := strToBigInt(params.K)
+				if !ok {
+					return errors.Wrap(err, "parse vpi marketDepthLong")
+				}
+				c.VPIHistory[name][timestamp] = types.VPIParamsParsed{
+					MarketDepthLong:  marketDepthLong,
+					MarketDepthShort: marketDepthShort,
+					Spread:           spread,
+					K:                k,
+				}
 			}
 		}
 
@@ -346,12 +373,12 @@ func (c *configDiscovery) GetAssetConfigsByProvider(name string) []*types.AssetC
 	return c.AssetConfigsMapByProvider[name]
 }
 
-func (c *configDiscovery) GetVPIHistory(name string) (map[int64]types.VPIParams, bool) {
+func (c *configDiscovery) GetVPIHistory(name string) (map[int64]types.VPIParamsParsed, bool) {
 	i, ok := c.VPIHistory[name]
 	return i, ok
 }
 
-func (c *configDiscovery) GetVPIParamsAtTimestamp(name string, ts int64) (*types.VPIParams, bool) {
+func (c *configDiscovery) GetVPIParamsAtTimestamp(name string, ts int64) (*types.VPIParamsParsed, bool) {
 	i, ok := c.VPIHistory[name]
 	if !ok {
 		return nil, false

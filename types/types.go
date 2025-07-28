@@ -1,5 +1,7 @@
 package types
 
+import "math/big"
+
 type AssetSchedule struct {
 	ScheduleTimeZone string `json:"scheduleTimeZone,omitempty"`
 	Schedule         string `json:"schedule"`
@@ -37,6 +39,13 @@ type VPIParams struct {
 	MarketDepthShort string `json:"marketDepthShort"`
 	Spread           string `json:"spread"`
 	K                string `json:"k"`
+}
+
+type VPIParamsParsed struct {
+	MarketDepthLong  *big.Int
+	MarketDepthShort *big.Int
+	Spread           *big.Int
+	K                *big.Int
 }
 
 type CollateralAsset struct {
