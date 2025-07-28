@@ -6,6 +6,7 @@ import (
 	"github.com/storm-trade/config-discovery-client/request"
 	"github.com/storm-trade/config-discovery-client/types"
 	"golang.org/x/exp/maps"
+	"strconv"
 	"time"
 )
 
@@ -51,6 +52,7 @@ type configDiscovery struct {
 	Assets        []*types.Asset
 	AssetConfigs  []*types.AssetConfig
 	Schedules     map[string]*types.AssetSchedule
+	VPIHistory    map[string]map[int64]types.VPIParams
 
 	Updates chan *types.AppConfig
 	// Maps
@@ -134,10 +136,26 @@ func (c *configDiscovery) FetchConfig() error {
 			return errors.Wrap(err, "fetch assets config")
 		}
 
+		history, err := request.Get[map[string]map[string]types.VPIParams](c.cfgUri + "/vpi-history")
+		if err != nil {
+			return errors.Wrap(err, "fetch vpi history")
+		}
+
 		c.Config = &cfg
 		c.Assets = assets
 		c.AssetConfigs = conf
 		c.Schedules = schedule.Schedules
+		c.VPIHistory = make(map[string]map[int64]types.VPIParams)
+		for name, h := range history {
+			c.VPIHistory[name] = make(map[int64]types.VPIParams)
+			for ts, params := range h {
+				timestamp, err := strconv.ParseInt(ts, 10, 64)
+				if err != nil {
+					return errors.Wrap(err, "parse vpi timestamp")
+				}
+				c.VPIHistory[name][timestamp] = params
+			}
+		}
 
 		c.VaultsMapByAddress = make(map[string]*types.Vault)
 		c.VaultsMapByCollateralAssetName = make(map[string]*types.Vault)
@@ -324,6 +342,25 @@ func (c *configDiscovery) GetAssetConfigByIndex(index int) *types.AssetConfig {
 
 func (c *configDiscovery) GetAssetConfigsByProvider(name string) []*types.AssetConfig {
 	return c.AssetConfigsMapByProvider[name]
+}
+
+func (c *configDiscovery) GetVPIHistory(name string) (map[int64]types.VPIParams, bool) {
+	i, ok := c.VPIHistory[name]
+	return i, ok
+}
+
+func (c *configDiscovery) GetVPIParamsAtTimestamp(name string, ts int64) (*types.VPIParams, bool) {
+	i, ok := c.VPIHistory[name]
+	if !ok {
+		return nil, false
+	}
+	// It's sorted in reverse timestamp
+	for timestamp, params := range i {
+		if timestamp <= ts {
+			return &params, true
+		}
+	}
+	return nil, false
 }
 
 func (c *configDiscovery) IsLazer(name string) bool {
