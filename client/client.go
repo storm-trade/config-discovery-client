@@ -42,6 +42,8 @@ type ConfigDiscovery interface {
 	GetAssetConfigByIndex(index int) *types.AssetConfig
 	GetAssetConfigsByProvider(name string) []*types.AssetConfig
 	IsLazer(address string) bool
+	GetVPIHistory(name string) (map[int64]types.VPIParams, bool)
+	GetVPIParamsAtTimestamp(name string, ts int64) (*types.VPIParams, bool)
 	UpdatesChannel() <-chan *types.AppConfig
 }
 
