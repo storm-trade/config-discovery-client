@@ -157,6 +157,9 @@ func (c *configDiscovery) FetchConfig() error {
 		for name, h := range history {
 			VPIHistory[name] = make(map[int64]types.VPIParamsParsed)
 			for ts, params := range h {
+				if params.MarketDepthLong == "" || params.MarketDepthShort == "" {
+					continue
+				}
 				timestamp, err := strconv.ParseInt(ts, 10, 64)
 				if err != nil {
 					return errors.Wrap(err, "parse vpi timestamp")
