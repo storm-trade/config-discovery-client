@@ -55,14 +55,14 @@ func strToBigInt(str string) (*big.Int, bool) {
 
 type configDiscovery struct {
 	cfgUri        string
+	Updates       chan *types.AppConfig
 	LastUpdatedAt *string
 	Config        *types.AppConfig
 	Assets        []*types.Asset
 	AssetConfigs  []*types.AssetConfig
 	Schedules     map[string]*types.AssetSchedule
-	VPIHistory    map[string]map[int64]types.VPIParamsParsed
 
-	Updates chan *types.AppConfig
+	VPIHistory map[string]map[int64]types.VPIParamsParsed
 	// Maps
 	VaultsMapByAddress               map[string]*types.Vault
 	VaultsMapByCollateralAssetName   map[string]*types.Vault
@@ -149,13 +149,13 @@ func (c *configDiscovery) FetchConfig() error {
 			return errors.Wrap(err, "fetch vpi history")
 		}
 
-		c.Config = &cfg
-		c.Assets = assets
-		c.AssetConfigs = conf
-		c.Schedules = schedule.Schedules
-		c.VPIHistory = make(map[string]map[int64]types.VPIParamsParsed)
+		Config := &cfg
+		Assets := assets
+		AssetConfigs := conf
+		Schedules := schedule.Schedules
+		VPIHistory := make(map[string]map[int64]types.VPIParamsParsed)
 		for name, h := range history {
-			c.VPIHistory[name] = make(map[int64]types.VPIParamsParsed)
+			VPIHistory[name] = make(map[int64]types.VPIParamsParsed)
 			for ts, params := range h {
 				timestamp, err := strconv.ParseInt(ts, 10, 64)
 				if err != nil {
@@ -177,7 +177,7 @@ func (c *configDiscovery) FetchConfig() error {
 				if !ok {
 					return errors.Wrap(err, "parse vpi marketDepthLong")
 				}
-				c.VPIHistory[name][timestamp] = types.VPIParamsParsed{
+				VPIHistory[name][timestamp] = types.VPIParamsParsed{
 					MarketDepthLong:  marketDepthLong,
 					MarketDepthShort: marketDepthShort,
 					Spread:           spread,
@@ -186,62 +186,86 @@ func (c *configDiscovery) FetchConfig() error {
 			}
 		}
 
-		c.VaultsMapByAddress = make(map[string]*types.Vault)
-		c.VaultsMapByCollateralAssetName = make(map[string]*types.Vault)
-		c.VaultsMapByCollateralAssetId = make(map[string]*types.Vault)
-		c.VaultsMapByLpJettonMasterAddress = make(map[string]*types.Vault)
+		VaultsMapByAddress := make(map[string]*types.Vault)
+		VaultsMapByCollateralAssetName := make(map[string]*types.Vault)
+		VaultsMapByCollateralAssetId := make(map[string]*types.Vault)
+		VaultsMapByLpJettonMasterAddress := make(map[string]*types.Vault)
 
 		for _, v := range c.Config.Vaults {
-			c.VaultsMapByAddress[v.VaultAddress] = &v
-			c.VaultsMapByCollateralAssetName[v.Asset.Name] = &v
-			c.VaultsMapByCollateralAssetId[v.Asset.AssetId] = &v
-			c.VaultsMapByLpJettonMasterAddress[v.LpJettonMaster] = &v
+			VaultsMapByAddress[v.VaultAddress] = &v
+			VaultsMapByCollateralAssetName[v.Asset.Name] = &v
+			VaultsMapByCollateralAssetId[v.Asset.AssetId] = &v
+			VaultsMapByLpJettonMasterAddress[v.LpJettonMaster] = &v
 		}
 
-		c.MarketsMapByAddress = make(map[string]*types.Market)
-		c.PrelaunchMarketsMapByAddress = make(map[string]*types.Market)
-		c.MarketsMapByBaseAssetName = make(map[string][]types.Market)
+		MarketsMapByAddress := make(map[string]*types.Market)
+		PrelaunchMarketsMapByAddress := make(map[string]*types.Market)
+		MarketsMapByBaseAssetName := make(map[string][]types.Market)
 
 		for _, m := range c.Config.OpenedMarkets {
-			c.MarketsMapByAddress[m.Address] = &m
-			c.MarketsMapByAddress[m.BaseAsset] = &m
+			MarketsMapByAddress[m.Address] = &m
+			MarketsMapByAddress[m.BaseAsset] = &m
 			if m.Type == "prelaunch" {
-				c.PrelaunchMarketsMapByAddress[m.Address] = &m
+				PrelaunchMarketsMapByAddress[m.Address] = &m
 			}
-			if c.MarketsMapByBaseAssetName[m.BaseAsset] == nil {
-				c.MarketsMapByBaseAssetName[m.BaseAsset] = make([]types.Market, 0)
+			if MarketsMapByBaseAssetName[m.BaseAsset] == nil {
+				MarketsMapByBaseAssetName[m.BaseAsset] = make([]types.Market, 0)
 			}
-			c.MarketsMapByBaseAssetName[m.BaseAsset] = append(c.MarketsMapByBaseAssetName[m.BaseAsset], m)
+			MarketsMapByBaseAssetName[m.BaseAsset] = append(c.MarketsMapByBaseAssetName[m.BaseAsset], m)
 		}
 
-		c.CollateralAssetsMapByName = make(map[string]*types.CollateralAsset)
+		CollateralAssetsMapByName := make(map[string]*types.CollateralAsset)
 
 		for _, a := range c.Config.CollateralAssets {
-			c.CollateralAssetsMapByName[a.Name] = &a
+			CollateralAssetsMapByName[a.Name] = &a
 		}
 
-		c.AssetsMapByName = make(map[string]*types.Asset)
-		c.AssetsMapByIndex = make(map[int]*types.Asset)
+		AssetsMapByName := make(map[string]*types.Asset)
+		AssetsMapByIndex := make(map[int]*types.Asset)
 
 		for _, a := range c.Assets {
-			c.AssetsMapByName[a.Name] = a
-			c.AssetsMapByIndex[a.Index] = a
+			AssetsMapByName[a.Name] = a
+			AssetsMapByIndex[a.Index] = a
 		}
 
-		c.AssetConfigsMapByProvider = make(map[string][]*types.AssetConfig)
-		c.AssetConfigsMapByName = make(map[string]*types.AssetConfig)
-		c.LazerAssetsMap = make(map[string]bool)
+		AssetConfigsMapByProvider := make(map[string][]*types.AssetConfig)
+		AssetConfigsMapByName := make(map[string]*types.AssetConfig)
+		AssetConfigsMapByIndex := make(map[int]*types.AssetConfig)
+		LazerAssetsMap := make(map[string]bool)
 		for _, a := range c.AssetConfigs {
-			c.AssetConfigsMapByName[a.Name] = a
+			AssetConfigsMapByName[a.Name] = a
+			AssetConfigsMapByIndex[a.Index] = a
 			for _, o := range a.Oracles {
 				if o.Provider == "pyth-lazer" {
-					c.LazerAssetsMap[a.Name] = true
+					LazerAssetsMap[a.Name] = true
 				}
-				if c.AssetConfigsMapByProvider[o.Provider] == nil {
-					c.AssetConfigsMapByProvider[o.Provider] = make([]*types.AssetConfig, 0)
+				if AssetConfigsMapByProvider[o.Provider] == nil {
+					AssetConfigsMapByProvider[o.Provider] = make([]*types.AssetConfig, 0)
 				}
-				c.AssetConfigsMapByProvider[o.Provider] = append(c.AssetConfigsMapByProvider[o.Provider], a)
+				AssetConfigsMapByProvider[o.Provider] = append(c.AssetConfigsMapByProvider[o.Provider], a)
 			}
+		}
+
+		{
+			c.Config = Config
+			c.Assets = Assets
+			c.AssetConfigs = AssetConfigs
+			c.Schedules = Schedules
+			c.VPIHistory = VPIHistory
+			c.VaultsMapByAddress = VaultsMapByAddress
+			c.VaultsMapByCollateralAssetName = VaultsMapByCollateralAssetName
+			c.VaultsMapByCollateralAssetId = VaultsMapByCollateralAssetId
+			c.VaultsMapByLpJettonMasterAddress = VaultsMapByLpJettonMasterAddress
+			c.MarketsMapByAddress = MarketsMapByAddress
+			c.PrelaunchMarketsMapByAddress = PrelaunchMarketsMapByAddress
+			c.MarketsMapByBaseAssetName = MarketsMapByBaseAssetName
+			c.AssetsMapByName = AssetsMapByName
+			c.AssetsMapByIndex = AssetsMapByIndex
+			c.CollateralAssetsMapByName = CollateralAssetsMapByName
+			c.AssetConfigsMapByName = AssetConfigsMapByName
+			c.AssetConfigsMapByIndex = AssetConfigsMapByIndex
+			c.AssetConfigsMapByProvider = AssetConfigsMapByProvider
+			c.LazerAssetsMap = LazerAssetsMap
 		}
 
 		go func() {
