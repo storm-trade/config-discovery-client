@@ -194,7 +194,7 @@ func (c *configDiscovery) FetchConfig() error {
 		VaultsMapByCollateralAssetId := make(map[string]*types.Vault)
 		VaultsMapByLpJettonMasterAddress := make(map[string]*types.Vault)
 
-		for _, v := range c.Config.Vaults {
+		for _, v := range Config.Vaults {
 			VaultsMapByAddress[v.VaultAddress] = &v
 			VaultsMapByCollateralAssetName[v.Asset.Name] = &v
 			VaultsMapByCollateralAssetId[v.Asset.AssetId] = &v
@@ -205,7 +205,7 @@ func (c *configDiscovery) FetchConfig() error {
 		PrelaunchMarketsMapByAddress := make(map[string]*types.Market)
 		MarketsMapByBaseAssetName := make(map[string][]types.Market)
 
-		for _, m := range c.Config.OpenedMarkets {
+		for _, m := range Config.OpenedMarkets {
 			MarketsMapByAddress[m.Address] = &m
 			MarketsMapByAddress[m.BaseAsset] = &m
 			if m.Type == "prelaunch" {
@@ -214,19 +214,19 @@ func (c *configDiscovery) FetchConfig() error {
 			if MarketsMapByBaseAssetName[m.BaseAsset] == nil {
 				MarketsMapByBaseAssetName[m.BaseAsset] = make([]types.Market, 0)
 			}
-			MarketsMapByBaseAssetName[m.BaseAsset] = append(c.MarketsMapByBaseAssetName[m.BaseAsset], m)
+			MarketsMapByBaseAssetName[m.BaseAsset] = append(MarketsMapByBaseAssetName[m.BaseAsset], m)
 		}
 
 		CollateralAssetsMapByName := make(map[string]*types.CollateralAsset)
 
-		for _, a := range c.Config.CollateralAssets {
+		for _, a := range Config.CollateralAssets {
 			CollateralAssetsMapByName[a.Name] = &a
 		}
 
 		AssetsMapByName := make(map[string]*types.Asset)
 		AssetsMapByIndex := make(map[int]*types.Asset)
 
-		for _, a := range c.Assets {
+		for _, a := range Assets {
 			AssetsMapByName[a.Name] = a
 			AssetsMapByIndex[a.Index] = a
 		}
@@ -235,7 +235,7 @@ func (c *configDiscovery) FetchConfig() error {
 		AssetConfigsMapByName := make(map[string]*types.AssetConfig)
 		AssetConfigsMapByIndex := make(map[int]*types.AssetConfig)
 		LazerAssetsMap := make(map[string]bool)
-		for _, a := range c.AssetConfigs {
+		for _, a := range AssetConfigs {
 			AssetConfigsMapByName[a.Name] = a
 			AssetConfigsMapByIndex[a.Index] = a
 			for _, o := range a.Oracles {
@@ -245,7 +245,7 @@ func (c *configDiscovery) FetchConfig() error {
 				if AssetConfigsMapByProvider[o.Provider] == nil {
 					AssetConfigsMapByProvider[o.Provider] = make([]*types.AssetConfig, 0)
 				}
-				AssetConfigsMapByProvider[o.Provider] = append(c.AssetConfigsMapByProvider[o.Provider], a)
+				AssetConfigsMapByProvider[o.Provider] = append(AssetConfigsMapByProvider[o.Provider], a)
 			}
 		}
 
