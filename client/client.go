@@ -166,19 +166,19 @@ func (c *configDiscovery) FetchConfig() error {
 				}
 				marketDepthLong, ok := strToBigInt(params.MarketDepthLong)
 				if !ok {
-					return errors.Wrap(err, "parse vpi marketDepthLong")
+					return errors.New("parse vpi marketDepthLong")
 				}
 				marketDepthShort, ok := strToBigInt(params.MarketDepthShort)
 				if !ok {
-					return errors.Wrap(err, "parse vpi marketDepthLong")
+					return errors.New("parse vpi marketDepthShort")
 				}
 				spread, ok := strToBigInt(params.Spread)
 				if !ok {
-					return errors.Wrap(err, "parse vpi marketDepthLong")
+					return errors.New("parse vpi spread")
 				}
 				k, ok := strToBigInt(params.K)
 				if !ok {
-					return errors.Wrap(err, "parse vpi marketDepthLong")
+					return errors.New("parse vpi k")
 				}
 				VPIHistory[name][timestamp] = types.VPIParamsParsed{
 					MarketDepthLong:  marketDepthLong,
