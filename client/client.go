@@ -8,6 +8,7 @@ import (
 	"golang.org/x/exp/maps"
 	"math/big"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -401,12 +402,12 @@ func (c *configDiscovery) GetAssetConfigsByProvider(name string) []*types.AssetC
 }
 
 func (c *configDiscovery) GetVPIHistory(name string) (map[int64]types.VPIParamsParsed, bool) {
-	i, ok := c.VPIHistory[name]
+	i, ok := c.VPIHistory[strings.Replace(name, "DEGEN", "", 1)]
 	return i, ok
 }
 
 func (c *configDiscovery) GetVPIParamsAtTimestamp(name string, ts int64) (*types.VPIParamsParsed, bool) {
-	i, ok := c.VPIHistory[name]
+	i, ok := c.VPIHistory[strings.Replace(name, "DEGEN", "", 1)]
 	if !ok {
 		return nil, false
 	}
