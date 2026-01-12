@@ -1,14 +1,15 @@
 package client
 
 import (
+	"math/big"
+	"strconv"
+	"time"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/storm-trade/config-discovery-client/request"
 	"github.com/storm-trade/config-discovery-client/types"
 	"golang.org/x/exp/maps"
-	"math/big"
-	"strconv"
-	"time"
 )
 
 type ConfigDiscovery interface {
@@ -239,7 +240,7 @@ func (c *configDiscovery) FetchConfig() error {
 			AssetConfigsMapByName[a.Name] = a
 			AssetConfigsMapByIndex[a.Index] = a
 			for _, o := range a.Oracles {
-				if o.Provider == "pyth-lazer" || o.Provider == "fake" {
+				if o.Provider == "pyth-lazer" || o.Provider == "stork-fast" || o.Provider == "fake" {
 					LazerAssetsMap[a.Name] = true
 				}
 				if AssetConfigsMapByProvider[o.Provider] == nil {
