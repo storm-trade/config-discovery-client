@@ -42,6 +42,7 @@ type VPIParams struct {
 }
 
 type VPIParamsParsed struct {
+	Timestamp        int64
 	MarketDepthLong  *big.Int
 	MarketDepthShort *big.Int
 	Spread           *big.Int

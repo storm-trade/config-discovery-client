@@ -182,6 +182,7 @@ func (c *configDiscovery) FetchConfig() error {
 					return errors.New("parse vpi k")
 				}
 				VPIHistory[name][timestamp] = types.VPIParamsParsed{
+					Timestamp:        timestamp,
 					MarketDepthLong:  marketDepthLong,
 					MarketDepthShort: marketDepthShort,
 					Spread:           spread,
@@ -410,13 +411,18 @@ func (c *configDiscovery) GetVPIParamsAtTimestamp(name string, ts int64) (*types
 	if !ok {
 		return nil, false
 	}
-	// It's sorted in reverse timestamp
+	var bestTS int64 = -1
+	var bestParams types.VPIParamsParsed
 	for timestamp, params := range i {
-		if timestamp <= ts {
-			return &params, true
+		if timestamp <= ts && timestamp > bestTS {
+			bestTS = timestamp
+			bestParams = params
 		}
 	}
-	return nil, false
+	if bestTS == -1 {
+		return nil, false
+	}
+	return &bestParams, true
 }
 
 func (c *configDiscovery) IsLazer(name string) bool {
