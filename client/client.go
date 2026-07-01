@@ -241,7 +241,7 @@ func (c *configDiscovery) FetchConfig() error {
 			AssetConfigsMapByName[a.Name] = a
 			AssetConfigsMapByIndex[a.Index] = a
 			for _, o := range a.Oracles {
-				if o.Provider == "pyth-lazer" || o.Provider == "stork-fast" || o.Provider == "fake" {
+				if o.Provider == "pyth-lazer" || o.Provider == "stork-fast" || o.Provider == "fake" || o.Provider == "stork-custom" {
 					LazerAssetsMap[a.Name] = true
 				}
 				if AssetConfigsMapByProvider[o.Provider] == nil {
