@@ -1,6 +1,20 @@
 package types
 
-import "math/big"
+import (
+	"encoding/json"
+	"math/big"
+)
+
+type ScheduleType string
+
+const (
+	ScheduleTypeEffective ScheduleType = "effective"
+	ScheduleTypeInfo      ScheduleType = "info"
+)
+
+func (s ScheduleType) IsEffective() bool {
+	return s == "" || s == ScheduleTypeEffective
+}
 
 type AssetSchedule struct {
 	ScheduleTimeZone string `json:"scheduleTimeZone,omitempty"`
@@ -9,7 +23,36 @@ type AssetSchedule struct {
 }
 
 type AssetsSchedule struct {
-	Schedules map[string]*AssetSchedule `json:"schedules"`
+	ScheduleType ScheduleType              `json:"scheduleType,omitempty"`
+	Schedules    map[string]*AssetSchedule `json:"schedules"`
+}
+
+func (s *AssetsSchedule) UnmarshalJSON(data []byte) error {
+	type alias AssetsSchedule
+
+	parsed := alias{
+		ScheduleType: ScheduleTypeEffective,
+	}
+
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		return err
+	}
+
+	*s = AssetsSchedule(parsed)
+
+	return nil
+}
+
+func (s AssetsSchedule) GetScheduleType() ScheduleType {
+	if s.ScheduleType == "" {
+		return ScheduleTypeEffective
+	}
+
+	return s.ScheduleType
+}
+
+func (s AssetsSchedule) IsEffective() bool {
+	return s.GetScheduleType().IsEffective()
 }
 
 type Asset struct {
