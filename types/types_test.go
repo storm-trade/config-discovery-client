@@ -7,22 +7,28 @@ import (
 	"github.com/test-go/testify/require"
 )
 
-func TestAssetsScheduleDefaultTypeIsEffective(t *testing.T) {
+func TestAssetScheduleDefaultTypeIsEffective(t *testing.T) {
 	var schedules AssetsSchedule
 
 	err := json.Unmarshal([]byte(`{"schedules":{"BTC":{"schedule":"0 0 * * 1-5","holidays":"[]"}}}`), &schedules)
 	require.NoError(t, err)
-	require.Equal(t, ScheduleTypeEffective, schedules.GetScheduleType())
-	require.True(t, schedules.IsEffective())
+	require.Equal(t, ScheduleTypeEffective, schedules.Schedules["BTC"].GetScheduleType())
+	require.True(t, schedules.Schedules["BTC"].IsEffective())
 }
 
-func TestAssetsScheduleInfoTypeParsing(t *testing.T) {
+func TestAssetScheduleInfoTypeParsing(t *testing.T) {
 	var schedules AssetsSchedule
 
-	err := json.Unmarshal([]byte(`{"scheduleType":"info","schedules":{"BTC":{"schedule":"0 0 * * 1-5","holidays":"[]"}}}`), &schedules)
+	err := json.Unmarshal([]byte(`{"schedules":{"SPCX":{"scheduleTimeZone":"America/New_York","schedule":"09:30-16:00|09:30-16:00|09:30-16:00|09:30-16:00|09:30-16:00|-|-","holidays":"[]","scheduleType":"info"}}}`), &schedules)
 	require.NoError(t, err)
-	require.Equal(t, ScheduleTypeInfo, schedules.GetScheduleType())
-	require.False(t, schedules.IsEffective())
+	require.Equal(t, ScheduleTypeInfo, schedules.Schedules["SPCX"].GetScheduleType())
+	require.False(t, schedules.Schedules["SPCX"].IsEffective())
+}
+
+func TestAssetScheduleNilIsEffective(t *testing.T) {
+	var schedule *AssetSchedule
+	require.Equal(t, ScheduleTypeEffective, schedule.GetScheduleType())
+	require.True(t, schedule.IsEffective())
 }
 
 func TestScheduleTypeIsEffective(t *testing.T) {

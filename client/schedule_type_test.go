@@ -8,11 +8,19 @@ import (
 )
 
 func TestConfigDiscoveryScheduleHelpers(t *testing.T) {
-	c := &configDiscovery{}
-	require.Equal(t, types.ScheduleTypeEffective, c.GetScheduleType())
-	require.True(t, c.IsScheduleEffective())
+	c := &configDiscovery{
+		Schedules: map[string]*types.AssetSchedule{},
+	}
+	require.Equal(t, types.ScheduleTypeEffective, c.GetScheduleType("BTC"))
+	require.True(t, c.IsScheduleEffective("BTC"))
 
-	c.ScheduleType = types.ScheduleTypeInfo
-	require.Equal(t, types.ScheduleTypeInfo, c.GetScheduleType())
-	require.False(t, c.IsScheduleEffective())
+	c.Schedules["SPCX"] = &types.AssetSchedule{
+		ScheduleType: types.ScheduleTypeInfo,
+	}
+	require.Equal(t, types.ScheduleTypeInfo, c.GetScheduleType("SPCX"))
+	require.False(t, c.IsScheduleEffective("SPCX"))
+
+	c.Schedules["ETH"] = &types.AssetSchedule{}
+	require.Equal(t, types.ScheduleTypeEffective, c.GetScheduleType("ETH"))
+	require.True(t, c.IsScheduleEffective("ETH"))
 }

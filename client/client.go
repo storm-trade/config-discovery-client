@@ -18,8 +18,8 @@ type ConfigDiscovery interface {
 	GetAssets() []*types.Asset
 	GetAssetConfigs() []*types.AssetConfig
 	GetSchedules() map[string]*types.AssetSchedule
-	GetScheduleType() types.ScheduleType
-	IsScheduleEffective() bool
+	GetScheduleType(name string) types.ScheduleType
+	IsScheduleEffective(name string) bool
 	HasMarketByAddress(address string) bool
 	GetMarketByAddress(address string) *types.Market
 	HasPrelaunchMarketByAddress(address string) bool
@@ -63,8 +63,7 @@ type configDiscovery struct {
 	Config        *types.AppConfig
 	Assets        []*types.Asset
 	AssetConfigs  []*types.AssetConfig
-	Schedules     map[string]*types.AssetSchedule
-	ScheduleType  types.ScheduleType
+	Schedules map[string]*types.AssetSchedule
 
 	VPIHistory map[string]map[int64]types.VPIParamsParsed
 	// Maps
@@ -157,7 +156,6 @@ func (c *configDiscovery) FetchConfig() error {
 		Assets := assets
 		AssetConfigs := conf
 		Schedules := schedule.Schedules
-		ScheduleType := schedule.GetScheduleType()
 		VPIHistory := make(map[string]map[int64]types.VPIParamsParsed)
 		for name, h := range history {
 			VPIHistory[name] = make(map[int64]types.VPIParamsParsed)
@@ -260,7 +258,6 @@ func (c *configDiscovery) FetchConfig() error {
 			c.Assets = Assets
 			c.AssetConfigs = AssetConfigs
 			c.Schedules = Schedules
-			c.ScheduleType = ScheduleType
 			c.VPIHistory = VPIHistory
 			c.VaultsMapByAddress = VaultsMapByAddress
 			c.VaultsMapByCollateralAssetName = VaultsMapByCollateralAssetName
@@ -306,16 +303,12 @@ func (c *configDiscovery) GetSchedules() map[string]*types.AssetSchedule {
 	return c.Schedules
 }
 
-func (c *configDiscovery) GetScheduleType() types.ScheduleType {
-	if c.ScheduleType == "" {
-		return types.ScheduleTypeEffective
-	}
-
-	return c.ScheduleType
+func (c *configDiscovery) GetScheduleType(name string) types.ScheduleType {
+	return c.Schedules[name].GetScheduleType()
 }
 
-func (c *configDiscovery) IsScheduleEffective() bool {
-	return c.GetScheduleType().IsEffective()
+func (c *configDiscovery) IsScheduleEffective(name string) bool {
+	return c.GetScheduleType(name).IsEffective()
 }
 
 func (c *configDiscovery) HasMarketByAddress(address string) bool {
