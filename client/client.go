@@ -15,6 +15,7 @@ import (
 type ConfigDiscovery interface {
 	ListenUpdates() error
 	GetConfig() *types.AppConfig
+	GetBuilders() []types.Builder
 	GetAssets() []*types.Asset
 	GetAssetConfigs() []*types.AssetConfig
 	GetSchedules() map[string]*types.AssetSchedule
@@ -63,7 +64,7 @@ type configDiscovery struct {
 	Config        *types.AppConfig
 	Assets        []*types.Asset
 	AssetConfigs  []*types.AssetConfig
-	Schedules map[string]*types.AssetSchedule
+	Schedules     map[string]*types.AssetSchedule
 
 	VPIHistory map[string]map[int64]types.VPIParamsParsed
 	// Maps
@@ -289,6 +290,13 @@ func (c *configDiscovery) UpdatesChannel() <-chan *types.AppConfig {
 
 func (c *configDiscovery) GetConfig() *types.AppConfig {
 	return c.Config
+}
+
+func (c *configDiscovery) GetBuilders() []types.Builder {
+	if c.Config == nil {
+		return nil
+	}
+	return c.Config.Builders
 }
 
 func (c *configDiscovery) GetAssets() []*types.Asset {

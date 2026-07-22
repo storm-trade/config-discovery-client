@@ -109,4 +109,12 @@ type AppConfig struct {
 	CollateralAssets []CollateralAsset `json:"assets"`
 	OpenedMarkets    []Market          `json:"openedMarkets"`
 	Vaults           []Vault           `json:"liquiditySources"`
+	Builders         []Builder         `json:"builders"`
+}
+
+type Builder struct {
+	Builder  string `json:"builder"`
+	Rebate   string `json:"rebate"`
+	Discount string `json:"discount"`
+	Active   bool   `json:"active"`
 }
