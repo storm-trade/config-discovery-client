@@ -19,6 +19,7 @@ type AssetSchedule struct {
 	ScheduleTimeZone string       `json:"scheduleTimeZone,omitempty"`
 	Schedule         string       `json:"schedule"`
 	Holidays         string       `json:"holidays"`
+	NonHolidays      string       `json:"nonHolidays"`
 	ScheduleType     ScheduleType `json:"scheduleType,omitempty"`
 }
 
@@ -57,6 +58,7 @@ type AssetConfig struct {
 	ScheduleTimeZone string         `json:"scheduleTimeZone"`
 	Schedule         string         `json:"schedule"`
 	Holidays         string         `json:"holidays"`
+	NonHolidays      string         `json:"nonHolidays"`
 	Oracles          []OracleConfig `json:"oracles"`
 }
 
